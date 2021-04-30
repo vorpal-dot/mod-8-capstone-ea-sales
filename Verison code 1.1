@@ -1,0 +1,71 @@
+library(tidyverse)
+#load Data
+vgsales<- read.csv("D:/CapStone/Data/Video_Games_Sales_as_at_22_Dec_2016.csv")
+#structure of Data
+str(vgsales)
+#Create Electronic Arts Filtered dataset
+easales<- filter(vgsales, Publisher == "Electronic Arts")
+#attach File
+attach(vgsales)
+# Create Critic Filtered Dataset
+vgallsales<- filter(vgsales, Critic_Score >= 1)
+#View Critic Dataset
+view(vgallsales)
+#Verify Structure of New Dataset
+str(vgallsales)
+str(easales)
+#Summary New Dataset
+summary(vgallsales)
+summary(easales)
+#Create Quick function for visual figure size
+fig <- function(width, heigth){
+options(repr.plot.width = width, repr.plot.height = heigth)
+}
+#bar chart of platform all
+fig(20,8)
+Platform_bar <- ggplot(vgallsales, aes(x=Platform,fill =Platform)) + geom_bar() + theme(text = element_text(size=10))
+Platform_bar
+#Bar chart Genre all
+fig(25,10)
+genre_bar <- ggplot(vgallsales, aes(x=Genre,fill =Genre)) + geom_bar() + theme(text = element_text(size=30),axis.text.x=element_text(angle = 45,vjust = 0.4,size=30))
+genre_bar
+#User scores visual
+fig(12, 8)
+User_Score_hist <- ggplot(vgallsales, aes(User_Score))
+User_Score_hist + geom_histogram(binwidth = 4, color = "black",fill = "Orange") + theme(text = element_text(size=30))
+#Top 10 Publishers Global sales
+fig(20,8)
+vgallsales %>% select(Publisher,Global_Sales)%>%group_by(Publisher)%>%
+summarise(Total_sales=sum(Global_Sales))%>%arrange(desc(Total_sales))%>% head(10)%>%
+ggplot(aes(x=Publisher,y=Total_sales,fill=Publisher))+geom_bar(stat="identity")+
+theme(text = element_text(size=5),legend.position="right",axis.text.x=element_text(angle = 90,vjust = 0.5,hjust = 1,size=10))+labs(x="Publisher",y="Global Sales",title="Top 10 Publishers")+scale_fill_brewer(palette="Paired")
+#Plot of Critic score and global sales EA
+Cs <- ggplot(easales, aes(Critic_Score,Global_Sales))
+Cs + geom_jitter(color = "blue") + theme(text = element_text(size = 10))
+#Attach all critic sales
+attach(vgallsales)
+#mutate the user score to a base 10 to.
+vgallsales <- vgallsales %>% mutate(User_Score = as.numeric(User_Score)*10)
+#Change Scientific notation
+options(scipen = 100)
+#Pearsons Corrilation critic all users
+pear_all<-cor.test(vgallsales$User_Score, vgallsales$NA_Sales, method = "pearson")
+#View Table
+pear_all
+# Mutate EA users to base 10 easier to work with scaled to critic review
+easales <-easales %>% mutate(User_Score = as.numeric(User_Score)*10)
+#verify the EA mutate
+view(easales)
+#create new variable to work with from EA
+x<-easales[6:10]
+#View New Variable sales
+view(x)
+#Pearson's Corrilation EA Critic North America Sales
+pear_ea<-cor.test(easales$NA_Sales, easales$Critic_Score, method = "pearson")
+#View Table
+pear_ea
+#ANOVA table Genre and Critic Score
+res.aov<- aov(Critic_Score ~ Genre, data = vgallsales)
+summary(res.aov)
+View(easales)
+savehistory("~/GitHub/mod-8-capstone-ea-sales/Verison code 1.1")
